@@ -1,5 +1,6 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({"/Users/jacobrosenthal/Documents/Code/browser-serialport/demo/fake_590bc0f4.js":[function(require,module,exports){
 var SerialPortLib = require('../index.js');
+var IDBOX_ONE = require('../index.js');
 var SerialPort = SerialPortLib.SerialPort;
 
 SerialPortLib.list(function(err, ports) {
@@ -55,19 +56,24 @@ function connect(port, baudrate) {
 	});
 
 	sp.on("data", function(data) {
-		output.textContent += data.toString();
+    console.log(parseInt(data));
+    output.textContent += data.toString() + "\n";
+    console.log(data.toString());
+    console.log(output.textContent);
 	});
 
 	function send() {
 		var line = input.value;
 		input.value = "";
 		sp.writeString(line + "\n");
-	}
+  }
+ 
 
 
 	var input = document.getElementById("input");
-	var sendButton = document.getElementById("send");
-	sendButton.onclick = send;
+  var sendButton = document.getElementById("send");
+  sendButton.onclick = send;
+  
 	input.onkeypress = function(e) {
 		if (e.which == 13) {
 			send();
@@ -306,8 +312,11 @@ SerialPort.prototype.write = function (buffer, callback) {
 };
 
 SerialPort.prototype.writeString = function (string, callback) {
-  this.write(str2ab(string), callback);
+  //this.write(str2ab(string), callback);
+  this.write(inquire(string), callback);
+  //this.write(IDBOX_ONE.Continuous_reading());
 };
+
 
 SerialPort.prototype.close = function (callback) {
   if ( this.connectionId<0 ) { return callback(new Error("Serialport not open.")); }
@@ -410,6 +419,18 @@ function str2ab(str) {
   return buf;
 }
 
+//function to send commands in decimal format. (0x49, 0x00, 0x01) "hexadecimal" = (73, 0, 1) "decimal"
+function inquire(str) {
+  var inquire = new Uint8Array([0x49,0,0]);
+  var i;
+  var string = str.split(" ");
+  var stringArray = new Array();
+  for(var i =0; i < string.length; i++){
+    stringArray[i] = parseInt(string[i])
+}
+  return stringArray;
+}
+
 // Convert buffer to ArrayBuffer
 function buffer2ArrayBuffer(buffer) {
   var buf = new ArrayBuffer(buffer.length);
@@ -425,7 +446,9 @@ function toBuffer(ab) {
   var view = new Uint8Array(ab);
   for (var i = 0; i < buffer.length; ++i) {
       buffer[i] = view[i];
+      console.log(parseInt(buffer[i]));
   }
+  
   return buffer;
 }
 
